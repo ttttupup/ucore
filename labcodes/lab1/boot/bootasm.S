@@ -13,11 +13,11 @@
 .globl start
 start:
 .code16                                             # Assemble for 16-bit mode
-    cli                                             # Disable interrupts
-    cld                                             # String operations increment
+    cli                                             # Disable interrupts   清除中断即禁用中断
+    cld                                             # String operations increment  清除方向标志位
 
     # Set up the important data segment registers (DS, ES, SS).
-    xorw %ax, %ax                                   # Segment number zero
+    xorw %ax, %ax                                   # Segment number zero   置0
     movw %ax, %ds                                   # -> Data Segment
     movw %ax, %es                                   # -> Extra Segment
     movw %ax, %ss                                   # -> Stack Segment
@@ -25,7 +25,7 @@ start:
     # Enable A20:
     #  For backwards compatibility with the earliest PCs, physical
     #  address line 20 is tied low, so that addresses higher than
-    #  1MB wrap around to zero by default. This code undoes this.
+    #  1MB wrap around to zero by default. This code undoes this.   开启A20,开启方法网上有很多  标志CF （进位）、OF （溢出）清0，PF （奇偶）ZF （0标志） SF（符号）反映运算结果，AF （辅助进位）未定义
 
 seta20.1:
     inb $0x64, %al                                  # Wait for not busy(8042 input buffer empty).
@@ -51,10 +51,10 @@ seta20.2:
     # and segment translation that makes virtual addresses
     # identical to physical addresses, so that the
     # effective memory map does not change during the switch.
-    lgdt gdtdesc
+    lgdt gdtdesc                            #加载gdt
     movl %cr0, %eax
-    orl $CR0_PE_ON, %eax
-    movl %eax, %cr0
+    orl $CR0_PE_ON, %eax                    #cr0   PE 启用保护标志  PG 分页标志
+    movl %eax, %cr0                           
 
     # Jump to next instruction, but in 32-bit code segment.
     # Switches processor into 32-bit mode.
@@ -73,7 +73,7 @@ protcseg:
     # Set up the stack pointer and call into C. The stack region is from 0--start(0x7c00)
     movl $0x0, %ebp
     movl $start, %esp
-    call bootmain
+    call bootmain                                   #调用bootmain函数
 
     # If bootmain returns (it shouldn't), loop.
 spin:
