@@ -69,16 +69,16 @@ readseg(uintptr_t va, uint32_t count, uint32_t offset) {
     uintptr_t end_va = va + count;
 
     // round down to sector boundary
-    va -= offset % SECTSIZE;
+    va -= offset % SECTSIZE;   //对齐扇区
 
     // translate from bytes to sectors; kernel starts at sector 1
-    uint32_t secno = (offset / SECTSIZE) + 1;
+    uint32_t secno = (offset / SECTSIZE) + 1;    //扇区号
 
     // If this is too slow, we could read lots of sectors at a time.
     // We'd write more to memory than asked, but it doesn't matter --
     // we load in increasing order.
     for (; va < end_va; va += SECTSIZE, secno ++) {
-        readsect((void *)va, secno);
+        readsect((void *)va, secno);     //逐个扇区读入
     }
 }
 
@@ -104,7 +104,8 @@ bootmain(void) {
 
     // call the entry point from the ELF header
     // note: does not return
-    ((void (*)(void))(ELFHDR->e_entry & 0xFFFFFF))();
+    //调用入口程序  void (*) (void) 函数指针，函数参数为void,返回值为void的函数指针
+    ((void (*)(void))(ELFHDR->e_entry & 0xFFFFFF))();   
 
 bad:
     outw(0x8A00, 0x8A00);

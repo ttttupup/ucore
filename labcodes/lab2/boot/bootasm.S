@@ -44,21 +44,21 @@ seta20.2:
     outb %al, $0x60                                 # 0xdf = 11011111, means set P2's A20 bit(the 1 bit) to 1
 
 probe_memory:
-    movl $0, 0x8000
+    movl $0, 0x8000                                 #对0x8000处的32位单元清零,即给位于0x8000处的struct e820map的成员变量nr_map清零
     xorl %ebx, %ebx
-    movw $0x8004, %di
+    movw $0x8004, %di                               #表示设置调用INT 15h BIOS中断后，BIOS返回的映射地址描述符的起始地址
 start_probe:
-    movl $0xE820, %eax
-    movl $20, %ecx
-    movl $SMAP, %edx
-    int $0x15
-    jnc cont
-    movw $12345, 0x8000
+    movl $0xE820, %eax                              #INT 15的中断调用参数
+    movl $20, %ecx                                  #设置地址范围描述符的大小为20字节，其大小等于struct e820map的成员变量map的大小
+    movl $SMAP, %edx                                #设置edx为534D4150h (即4个ASCII字符“SMAP”)，这是一个约定
+    int $0x15                                       #调用int 0x15中断，要求BIOS返回一个用地址范围描述符表示的内存段信息
+    jnc cont                                        #如果eflags的CF位为0，则表示还有内存段需要探测
+    movw $12345, 0x8000                             #探测有问题，结束探测
     jmp finish_probe
 cont:
-    addw $20, %di
-    incl 0x8000
-    cmpl $0, %ebx
+    addw $20, %di                                   #设置下一个BIOS返回的映射地址描述符的起始地址
+    incl 0x8000                                     #递增struct e820map的成员变量nr_map
+    cmpl $0, %ebx                                   #如果INT0x15返回的ebx为零，表示探测结束，否则继续探测
     jnz start_probe
 finish_probe:
 
@@ -67,13 +67,13 @@ finish_probe:
     # identical to physical addresses, so that the
     # effective memory map does not change during the switch.
     lgdt gdtdesc
-    movl %cr0, %eax
-    orl $CR0_PE_ON, %eax
-    movl %eax, %cr0
+    movl %cr0, %eax       #CR0 系统内的控制寄存器之一  PE：CR0的位0是启用保护（Protection Enable）标志。当设置该位时即开启了保护模式；当复位时即进入实地址模式。这个标志仅开启段级保护，而并没有启用分页机制。若要启用分页机制，那么PE和PG标志都要置位
+    orl $CR0_PE_ON, %eax  
+    movl %eax, %cr0       #开启保护模式  PE=1
 
     # Jump to next instruction, but in 32-bit code segment.
     # Switches processor into 32-bit mode.
-    ljmp $PROT_MODE_CSEG, $protcseg
+    ljmp $PROT_MODE_CSEG, $protcseg    #远转移 disp(base,index,scale)=base +index*scale+disp
 
 .code32                                             # Assemble for 32-bit mode
 protcseg:

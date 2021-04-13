@@ -18,7 +18,7 @@ static inline bool test_bit(int nr, volatile void *addr) __attribute__((always_i
  * */
 static inline void
 set_bit(int nr, volatile void *addr) {
-    asm volatile ("btsl %1, %0" :"=m" (*(volatile long *)addr) : "Ir" (nr));
+    asm volatile ("btsl %1, %0" :"=m" (*(volatile long *)addr) : "Ir" (nr));   //位测试指令  将ADDR操作数中的第nr位（从0始）送CF，并且第nr位置1
 }
 
 /* *
@@ -28,7 +28,7 @@ set_bit(int nr, volatile void *addr) {
  * */
 static inline void
 clear_bit(int nr, volatile void *addr) {
-    asm volatile ("btrl %1, %0" :"=m" (*(volatile long *)addr) : "Ir" (nr));
+    asm volatile ("btrl %1, %0" :"=m" (*(volatile long *)addr) : "Ir" (nr));  //位测试并复位指令  将ADDR操作数中的第nr位（从0始）送CF，并且第nr位置0
 }
 
 /* *
@@ -38,7 +38,7 @@ clear_bit(int nr, volatile void *addr) {
  * */
 static inline void
 change_bit(int nr, volatile void *addr) {
-    asm volatile ("btcl %1, %0" :"=m" (*(volatile long *)addr) : "Ir" (nr));
+    asm volatile ("btcl %1, %0" :"=m" (*(volatile long *)addr) : "Ir" (nr)); //为操作数addr的第nr位送CF，然后将操作数的第nr位取反。
 }
 
 /* *
@@ -49,7 +49,7 @@ change_bit(int nr, volatile void *addr) {
 static inline bool
 test_bit(int nr, volatile void *addr) {
     int oldbit;
-    asm volatile ("btl %2, %1; sbbl %0,%0" : "=r" (oldbit) : "m" (*(volatile long *)addr), "Ir" (nr));
+    asm volatile ("btl %2, %1; sbbl %0,%0" : "=r" (oldbit) : "m" (*(volatile long *)addr), "Ir" (nr)); //sbb是带借位减法指令  指令格式：sbb 操作对象1，操作对象2  功能:操作对象1=操作对象1-操作对象2-CF   sbb ax,bx实现的功能是: (ax)=(ax)-(bx)-CF
     return oldbit != 0;
 }
 
